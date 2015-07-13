@@ -47,12 +47,12 @@ public class MainActivityFragment extends Fragment {
     private ArrayList<MovieItem> getData()
     {
         final ArrayList<MovieItem> movieItems = new ArrayList<>();
-        Bitmap bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.image_1);
-        movieItems.add(new MovieItem(bitmap,"Image#1"));
-        bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.image_2);
-        movieItems.add(new MovieItem(bitmap,"Image#2"));
-        bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.image_3);
-        movieItems.add(new MovieItem(bitmap,"Image#3"));
+        Bitmap bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.movie01);
+        movieItems.add(new MovieItem(bitmap,"Jurassic World"));
+        bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.movie02);
+        movieItems.add(new MovieItem(bitmap,"Terminator Genisys"));
+        bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.movie03);
+        movieItems.add(new MovieItem(bitmap,"Minions"));
         return movieItems;
     }
 }
