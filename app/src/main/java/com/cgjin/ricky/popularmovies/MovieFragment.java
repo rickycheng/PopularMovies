@@ -72,28 +72,24 @@ public class MovieFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         movieGridView = (GridView) rootView.findViewById(R.id.movie_GridView);
-        movieGridAdapter = new MovieGridAdapter(rootView.getContext(), R.layout.movie_item, getData());
+        movieGridAdapter = new MovieGridAdapter(rootView.getContext(), R.layout.movie_item, new ArrayList<MovieItem>());
 
         movieGridView.setAdapter(movieGridAdapter);
 
-        //ImageView iv = (ImageView) rootView.findViewById(R.id.picasso_imageview);
-        // Picasso.with(this.getActivity())
-        //        .load("https://cms-assets.tutsplus.com/uploads/users/21/posts/19431/featured_image/CodeFeature.jpg")
-        //        .into(iv);
         return rootView;
     }
 
-    private ArrayList<MovieItem> getData() {
-        final ArrayList<MovieItem> movieItems = new ArrayList<>();
-        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.movie01);
-        movieItems.add(new MovieItem(bitmap, "Jurassic World"));
-        bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.movie02);
-        movieItems.add(new MovieItem(bitmap, "Terminator Genisys"));
-        bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.movie03);
-        movieItems.add(new MovieItem(bitmap, "Minions"));
-        return movieItems;
+    private void updateMovieInfo()
+    {
+        FetchMovieInfoTask movieInfoTask = new FetchMovieInfoTask();
+        movieInfoTask.execute();
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        updateMovieInfo();
+    }
 
     public class FetchMovieInfoTask extends AsyncTask<String, Void, List<MovieItem>> {
 
@@ -180,6 +176,17 @@ public class MovieFragment extends Fragment {
                 e.printStackTrace();
             }
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(List<MovieItem> movieItems) {
+            super.onPostExecute(movieItems);
+            if (movieItems != null) {
+                movieGridAdapter.clear();
+                for (MovieItem mi : movieItems) {
+                    movieGridAdapter.add(mi);
+                }
+            }
         }
 
         private List<MovieItem> getMovieDataFromJson(String movieJsonStr) throws JSONException {

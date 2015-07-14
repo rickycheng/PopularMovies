@@ -9,14 +9,15 @@ import java.util.Date;
  */
 public class MovieItem {
     private Bitmap thumbnail;
-    private String thumbnail_url;
+    private String thumbnail_url="/nBNZadXqJSdt05SHLqgT0HuC5Gm.jpg";
     private String original_title;
     private String overview;
     private Double user_rating;
     private Date release_date;
     private String id;
+    private final String POSTER_BASEURL = "http://image.tmdb.org/t/p/w185/";
 
-    public MovieItem(String id, String original_title, String thumbnail_url,  String overview, Double user_rating, Date release_date) {
+    public MovieItem(String id, String original_title, String thumbnail_url, String overview, Double user_rating, Date release_date) {
         this.thumbnail_url = thumbnail_url;
         this.original_title = original_title;
         this.overview = overview;
@@ -40,7 +41,7 @@ public class MovieItem {
     }
 
     public String getThumbnail_url() {
-        return thumbnail_url;
+        return POSTER_BASEURL + thumbnail_url;
     }
 
     public void setThumbnail_url(String thumbnail_url) {

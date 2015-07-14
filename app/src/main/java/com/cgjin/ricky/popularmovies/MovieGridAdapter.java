@@ -9,6 +9,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
+
 import java.util.ArrayList;
 
 /**
@@ -46,7 +48,11 @@ public class MovieGridAdapter extends ArrayAdapter {
         MovieItem item = data.get(position);
 
         holder.movieTitle.setText(item.getOriginal_title());
-        holder.movieThumbnail.setImageBitmap(item.getThumbnail());
+        //holder.movieThumbnail.setImageBitmap(item.getThumbnail());
+        Picasso.with(context)
+                .load(item.getThumbnail_url())
+                .into(holder.movieThumbnail);
+
         return row;
     }
 
