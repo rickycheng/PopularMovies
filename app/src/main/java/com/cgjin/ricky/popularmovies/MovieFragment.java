@@ -1,7 +1,6 @@
 package com.cgjin.ricky.popularmovies;
 
 import android.app.Fragment;
-import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -15,9 +14,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.GridView;
-import android.widget.ImageView;
 
-import com.squareup.picasso.Picasso;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -25,7 +25,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -91,12 +95,12 @@ public class MovieFragment extends Fragment {
     }
 
 
-    public class FetchMovieInfoTask extends AsyncTask<String, Void, Void> {
+    public class FetchMovieInfoTask extends AsyncTask<String, Void, List<MovieItem>> {
 
         private final String LOG_TAG = FetchMovieInfoTask.class.getSimpleName();
 
         @Override
-        protected Void doInBackground(String... params) {
+        protected List<MovieItem> doInBackground(String... params) {
             // These two need to be declared outside the try/catch
             // so that they can be closed in the finally block.
             HttpURLConnection urlConnection = null;
@@ -150,8 +154,9 @@ public class MovieFragment extends Fragment {
                     movieJsonString = null;
                 }
                 movieJsonString = buffer.toString();
+
             } catch (IOException e) {
-                Log.e("PlaceholderFragment", "Error ", e);
+                Log.e(LOG_TAG, "Error ", e);
                 // If the code didn't successfully get the weather data, there's no point in attempting
                 // to parse it.
                 movieJsonString = null;
@@ -163,11 +168,69 @@ public class MovieFragment extends Fragment {
                     try {
                         reader.close();
                     } catch (final IOException e) {
-                        Log.e("PlaceholderFragment", "Error closing stream", e);
+                        Log.e(LOG_TAG, "Error closing stream", e);
                     }
                 }
             }
+
+            try {
+                return getMovieDataFromJson(movieJsonString);
+            } catch (JSONException e) {
+                Log.e(LOG_TAG, e.getMessage(), e);
+                e.printStackTrace();
+            }
             return null;
+        }
+
+        private List<MovieItem> getMovieDataFromJson(String movieJsonStr) throws JSONException {
+
+            final String MOVIEDB_LIST = "results";
+            final String MOVIEDB_ID = "id";
+            final String MOVIEDB_TITLE = "original_title";
+            final String MOVIEDB_OVERVIEW = "overview";
+            final String MOVIEDB_RELEASE_DATE = "release_date";
+            final String MOVIEDB_POSTER = "poster_path";
+            final String MOVIEDB_RATINGS = "vote_average";
+
+            JSONObject movieJson = new JSONObject(movieJsonStr);
+            JSONArray movieArray = movieJson.getJSONArray(MOVIEDB_LIST);
+
+            List<MovieItem> movieList = new ArrayList<MovieItem>();
+
+            for (int i = 0; i < movieArray.length(); i++) {
+                String movieID;
+                String originalTitle;
+                String overview;
+                Date releaseDate;
+                String posterURL;
+                Double ratings;
+
+                JSONObject movieObject = movieArray.getJSONObject(i);
+                movieID = movieObject.getString(MOVIEDB_ID);
+                originalTitle = movieObject.getString(MOVIEDB_TITLE);
+                overview = movieObject.getString(MOVIEDB_OVERVIEW);
+                posterURL = movieObject.getString(MOVIEDB_POSTER);
+
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                releaseDate = new Date();
+                try {
+                    releaseDate = dateFormat.parse(movieObject.getString(MOVIEDB_RELEASE_DATE));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
+                ratings = Double.parseDouble(movieObject.getString(MOVIEDB_RATINGS));
+                MovieItem mi = new MovieItem(movieID, originalTitle, posterURL, overview, ratings, releaseDate);
+                movieList.add(mi);
+
+            }
+
+            for (MovieItem mi : movieList) {
+                Log.v(LOG_TAG, mi.toString());
+            }
+
+            return movieList;
+
         }
     }
 }
