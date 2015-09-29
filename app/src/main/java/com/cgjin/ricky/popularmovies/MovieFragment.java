@@ -1,11 +1,15 @@
 package com.cgjin.ricky.popularmovies;
 
 import android.app.Fragment;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Parcelable;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -13,7 +17,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,6 +44,8 @@ import java.util.List;
 public class MovieFragment extends Fragment {
     private GridView movieGridView;
     private MovieGridAdapter movieGridAdapter;
+    private String mSortBy = null;
+    public final String SORT_BY_SAVEDINSTANCESTATE_KEY = "SAVEd_INSTANCE_KEY";
 
     public MovieFragment() {
     }
@@ -47,6 +55,9 @@ public class MovieFragment extends Fragment {
         super.onCreate(savedInstanceState);
         // Add this line in order for this fragment to handle menu events.
         setHasOptionsMenu(true);
+        if (savedInstanceState != null) {
+            mSortBy = savedInstanceState.getString(SORT_BY_SAVEDINSTANCESTATE_KEY);
+        }
     }
 
     @Override
@@ -75,7 +86,24 @@ public class MovieFragment extends Fragment {
         movieGridAdapter = new MovieGridAdapter(rootView.getContext(), R.layout.movie_item, new ArrayList<MovieItem>());
 
         movieGridView.setAdapter(movieGridAdapter);
+        movieGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                MovieItem item = (MovieItem)movieGridAdapter.getItem(position);
+                //String movieInfo = item.getOriginal_title();
+                //Toast.makeText(getActivity(),movieInfo, Toast.LENGTH_SHORT).show();
+                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 
+                Intent intent = new Intent(getActivity(), MovieDetailActivity.class);
+                intent.putExtra("original_title", item.getOriginal_title());
+                intent.putExtra("release_date", formatter.format(item.getRelease_date()));
+                intent.putExtra("thumbnail_url",item.getThumbnail_url());
+                intent.putExtra("vote_average",item.getUser_rating().toString());
+                intent.putExtra("plot", item.getOverview());
+
+                startActivity(intent);
+            }
+        });
         return rootView;
     }
 
@@ -91,6 +119,30 @@ public class MovieFragment extends Fragment {
         updateMovieInfo();
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        // get sort by from share preference
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String sortBy = sharedPref.getString(
+                getString(R.string.preference_sort_key),
+                getString(R.string.preference_sort_default));
+
+        if (mSortBy == null || mSortBy.compareTo(sortBy) != 0) {
+            mSortBy = sortBy;
+
+            updateMovieInfo();
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putString(SORT_BY_SAVEDINSTANCESTATE_KEY, mSortBy);
+        super.onSaveInstanceState(outState);
+        //outState.putParcelableArrayList(MOVIE_KEY, (ArrayList<? extends Parcelable>) listOfMovies);
+
+    }
+
     public class FetchMovieInfoTask extends AsyncTask<String, Void, List<MovieItem>> {
 
         private final String LOG_TAG = FetchMovieInfoTask.class.getSimpleName();
@@ -104,7 +156,9 @@ public class MovieFragment extends Fragment {
 
             // Will contain the raw JSON response as a string.
             String movieJsonString = null;
-            String sortOption = "popularity.desc";
+            //String sortOption = "popularity.desc";
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            mSortBy = prefs.getString(getString(R.string.preference_sort_key),getString(R.string.preference_sort_default));
             String APIKey = "21ce5cf7d4a6b25066226b8888f7b082";
 
             try {
@@ -116,7 +170,7 @@ public class MovieFragment extends Fragment {
                 final String APIKEY_PARAM = "api_key";
 
                 Uri builtUri = Uri.parse(MOVIEDB_BASE_URL).buildUpon()
-                        .appendQueryParameter(SORTBY_PARAM, sortOption)
+                        .appendQueryParameter(SORTBY_PARAM, mSortBy)
                         .appendQueryParameter(APIKEY_PARAM, APIKey).build();
 
                 URL url = new URL(builtUri.toString());
